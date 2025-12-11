@@ -10,38 +10,34 @@ function App() {
   const [detectionResult, setDetectionResult] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
+  // 👇 PASTE YOUR RENDER URL HERE
+  const API_URL = "https://yolo-backend-YOUR-URL.onrender.com/detect"; 
+
   const processImage = async (imageData) => {
     setIsProcessing(true);
     setDetectionResult(null);
     setPreviewImage(imageData);
     
     try {
-      // ⚠️ TODO: Replace with your actual ML API endpoint
-      // const response = await fetch('http://localhost:5000/api/detect', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ image: imageData })
-      // });
+      const blob = await (await fetch(imageData)).blob();
+      const formData = new FormData();
+      formData.append('image', blob, 'capture.jpg');
+
+      // 2. Send to your Live Backend
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        body: formData, 
+      });
       
-      // if (!response.ok) throw new Error('Detection failed');
-      // const result = await response.json();
-      // setDetectionResult(result);
+      if (!response.ok) throw new Error('Detection failed');
       
-      // ✅ MOCK DATA - Remove this when you integrate your ML model
-      setTimeout(() => {
-        const mockResult = {
-          detected: Math.random() > 0.5,
-          objectType: ['gun', 'knife', 'weapon'][Math.floor(Math.random() * 3)],
-          confidence: (Math.random() * 30 + 70).toFixed(2),
-          timestamp: new Date().toLocaleString()
-        };
-        setDetectionResult(mockResult);
-        setIsProcessing(false);
-      }, 2000);
+      const result = await response.json();
+      setDetectionResult(result);
       
     } catch (error) {
       console.error('Detection error:', error);
-      alert('Error processing image. Make sure your backend is running.');
+      alert('Error connecting to server. Please check your internet connection or if the backend is waking up (it takes 50s on free tier).');
+    } finally {
       setIsProcessing(false);
     }
   };
@@ -116,25 +112,12 @@ function App() {
 
         {/* Integration Info */}
         <div className="info-panel">
-          <h3>🔌 ML Model Integration</h3>
-          <p>To connect your machine learning model, update the API endpoint in <code>src/App.js</code> (line 19-26):</p>
-          <pre>
-{`const response = await fetch('YOUR_ML_API_ENDPOINT', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ image: imageData })
-});
-const result = await response.json();`}
-          </pre>
-          <p style={{ marginTop: 12 }}>Expected response format:</p>
-          <pre>
-{`{
-  "detected": true,
-  "objectType": "gun",
-  "confidence": 87.5,
-  "timestamp": "2024-12-04 10:30:00"
-}`}
-          </pre>
+          <h3>⚡ System Status</h3>
+          <p>Connected to: <code>{API_URL}</code></p>
+          <p style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+            Note: On the free Render plan, the server spins down after inactivity. 
+            The first request might take 50+ seconds to wake it up.
+          </p>
         </div>
       </div>
     </div>
