@@ -11,7 +11,7 @@ function App() {
   const [previewImage, setPreviewImage] = useState(null);
 
   // 👇 PASTE YOUR RENDER URL HERE
-  const API_URL = "https://yolo-backend-YOUR-URL.onrender.com/detect"; 
+  const API_URL = "https://yolo-backend-mhrm.onrender.com"; 
 
   const processImage = async (imageData) => {
     setIsProcessing(true);
