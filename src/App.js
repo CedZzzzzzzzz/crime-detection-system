@@ -10,7 +10,6 @@ function App() {
   const [detectionResult, setDetectionResult] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
-  // 👇 PASTE YOUR RENDER URL HERE
   const API_URL = "https://yolo-backend-mhrm.onrender.com/detect"; 
 
   const processImage = async (imageData) => {
