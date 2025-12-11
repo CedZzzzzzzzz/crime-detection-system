@@ -109,16 +109,6 @@ function App() {
             />
           </div>
         </div>
-
-        {/* Integration Info */}
-        <div className="info-panel">
-          <h3>⚡ System Status</h3>
-          <p>Connected to: <code>{API_URL}</code></p>
-          <p style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
-            Note: On the free Render plan, the server spins down after inactivity. 
-            The first request might take 50+ seconds to wake it up.
-          </p>
-        </div>
       </div>
     </div>
   );
