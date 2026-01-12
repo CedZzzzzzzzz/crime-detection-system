@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, Upload, AlertTriangle, CheckCircle, XCircle, RefreshCw, MessageCircle, Send, Bot, User, X } from 'lucide-react';
+import { Camera, Upload, AlertTriangle, CheckCircle, XCircle, RefreshCw, MessageCircle, Send, Bot, User, X, Target } from 'lucide-react';
 import './App.css';
 
-export default function CrimeDetectionApp() {
-  // State Management
+export default function DetectiveInvestigationApp() {
   const [activeTab, setActiveTab] = useState('camera');
   const [isProcessing, setIsProcessing] = useState(false);
   const [detectionResult, setDetectionResult] = useState(null);
@@ -17,22 +16,20 @@ export default function CrimeDetectionApp() {
   
   const [stream, setStream] = useState(null);
   
-  // Refs
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const fileInputRef = useRef(null);
   const chatEndRef = useRef(null);
+  const imageCanvasRef = useRef(null);
 
   const BACKEND_URL = 'https://yolo-backend-mhrm.onrender.com';
 
-  // Auto-scroll chat to bottom when new messages arrive
   useEffect(() => {
     if (showChat && chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, showChat]);
 
-  // Camera Management
   useEffect(() => {
     if (activeTab === 'camera') {
       startCamera();
@@ -41,6 +38,13 @@ export default function CrimeDetectionApp() {
     }
     return () => stopCamera();
   }, [activeTab]);
+
+  // Draw bounding boxes on image
+  useEffect(() => {
+    if (detectionResult && previewImage && imageCanvasRef.current) {
+      drawBoundingBoxes();
+    }
+  }, [detectionResult, previewImage]);
 
   const startCamera = async () => {
     try {
@@ -88,7 +92,6 @@ export default function CrimeDetectionApp() {
     }, 'image/jpeg', 0.8);
   };
 
-  // File Upload Handler
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file || !file.type.startsWith('image/')) return;
@@ -103,7 +106,6 @@ export default function CrimeDetectionApp() {
     processImage(file);
   };
 
-  // Main Detection Function - Sends image to backend YOLO API
   const processImage = async (file) => {
     setIsProcessing(true);
     setDetectionResult(null);
@@ -126,9 +128,22 @@ export default function CrimeDetectionApp() {
       setDetectionResult(result);
       setShowChat(true);
       
+      // Detective-style introduction
+      const evidenceCount = result.all_detections?.length || 0;
+      const threats = result.all_detections?.filter(d => 
+        ['gun', 'knife', 'weapon', 'blood'].some(t => d.class_name?.toLowerCase().includes(t))
+      ) || [];
+      
       const welcomeMessage = result.detected
-        ? `⚠️ **THREAT DETECTED**\n\nI've analyzed the image and found **${result.total_objects || 1} object(s)**.\n\n**Primary Threat:** ${result.objectType}\n**Confidence:** ${result.confidence}%\n**Threat Level:** ${result.threat_level || 'high'}\n\nThis requires immediate attention. What would you like to know?`
-        : `✅ **NO THREATS DETECTED**\n\nI've analyzed the image thoroughly. The scene appears safe.\n\nFeel free to ask me questions!`;
+        ? `🕵️ **CRIME SCENE ANALYSIS COMPLETE**\n\n` +
+          `**Evidence Found:** ${evidenceCount} item(s) detected\n` +
+          `**Threats Identified:** ${threats.length} dangerous object(s)\n` +
+          `**Primary Threat:** ${result.objectType} (${result.confidence}% confidence)\n\n` +
+          `I've marked all evidence with bounding boxes. What would you like to investigate?`
+        : `🕵️ **SCENE ANALYSIS COMPLETE**\n\n` +
+          `**Status:** No threats detected\n` +
+          `**Evidence:** ${evidenceCount} object(s) found\n\n` +
+          `The scene appears safe. How may I assist your investigation?`;
       
       addBotMessage(welcomeMessage);
       
@@ -140,7 +155,58 @@ export default function CrimeDetectionApp() {
     }
   };
 
-  // Chat Message Handlers
+  // Draw bounding boxes on canvas
+  const drawBoundingBoxes = () => {
+    const canvas = imageCanvasRef.current;
+    const img = new Image();
+    
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      
+      // Draw image
+      ctx.drawImage(img, 0, 0);
+      
+      // Draw each detection box
+      if (detectionResult.all_detections) {
+        detectionResult.all_detections.forEach((detection, idx) => {
+          const bbox = detection.xyxy || detection.bbox;
+          if (!bbox || bbox.length < 4) return;
+          
+          const [x1, y1, x2, y2] = bbox;
+          const width = x2 - x1;
+          const height = y2 - y1;
+          
+          // Determine color based on threat level
+          const isThreat = ['gun', 'knife', 'weapon', 'blood'].some(t => 
+            detection.class_name?.toLowerCase().includes(t)
+          );
+          const color = isThreat ? '#ff0000' : '#00ff00';
+          
+          // Draw box
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 3;
+          ctx.strokeRect(x1, y1, width, height);
+          
+          // Draw label background
+          const label = `${detection.class_name} ${detection.confidence}%`;
+          ctx.font = 'bold 14px Arial';
+          const textWidth = ctx.measureText(label).width;
+          
+          ctx.fillStyle = color;
+          ctx.fillRect(x1, y1 - 25, textWidth + 10, 25);
+          
+          // Draw label text
+          ctx.fillStyle = '#000';
+          ctx.fillText(label, x1 + 5, y1 - 8);
+        });
+      }
+    };
+    
+    img.src = previewImage;
+  };
+
   const addBotMessage = (text) => {
     setMessages(prev => [...prev, { role: 'assistant', content: text }]);
   };
@@ -149,7 +215,6 @@ export default function CrimeDetectionApp() {
     setMessages(prev => [...prev, { role: 'user', content: text }]);
   };
 
-  // Chat Function - Sends question to Gemini AI
   const handleSendMessage = async () => {
     if (!inputMessage.trim() || !detectionResult) return;
     
@@ -177,7 +242,7 @@ export default function CrimeDetectionApp() {
       
     } catch (error) {
       console.error('Chat error:', error);
-      addBotMessage("⚠️ I couldn't reach the AI server. Please check your connection.");
+      addBotMessage("⚠️ I couldn't reach the investigation AI. Please check your connection.");
     } finally {
       setIsChatProcessing(false);
     }
@@ -202,8 +267,8 @@ export default function CrimeDetectionApp() {
           <div className="header-content">
             <AlertTriangle className="header-icon" />
             <div>
-              <h1>DETECTIVE CO-AI-NAN</h1>
-              <p className="header-subtitle">Real-time weapon & Threat detection</p>
+              <h1>Detective Co-AI-Nan</h1>
+              <p className="header-subtitle">AI-powered crime scene analysis with evidence detection</p>
             </div>
           </div>
         </div>
@@ -223,7 +288,7 @@ export default function CrimeDetectionApp() {
             onClick={() => setActiveTab('upload')} 
             className={`tab ${activeTab === 'upload' ? 'active' : ''}`}
           >
-            <Upload size={20} /> Upload Image
+            <Upload size={20} /> Upload Evidence
           </button>
         </div>
 
@@ -234,7 +299,7 @@ export default function CrimeDetectionApp() {
             <h2>
               {activeTab === 'camera' 
                 ? <><Camera size={20} color="#ef4444" /> Camera Feed</> 
-                : <><Upload size={20} color="#ef4444" /> Upload Image</>
+                : <><Upload size={20} color="#ef4444" /> Upload Evidence</>
               }
             </h2>
 
@@ -250,7 +315,7 @@ export default function CrimeDetectionApp() {
                   className="btn btn-primary"
                 >
                   <Camera size={20} /> 
-                  {isProcessing ? 'Processing...' : 'Capture & Analyze'}
+                  {isProcessing ? 'Analyzing...' : 'Capture Scene'}
                 </button>
               </div>
             ) : (
@@ -260,7 +325,7 @@ export default function CrimeDetectionApp() {
               >
                 <Upload className="upload-icon" />
                 <p className="upload-text">
-                  {isProcessing ? 'Processing...' : 'Click to upload'}
+                  {isProcessing ? 'Analyzing Evidence...' : 'Upload Crime Scene'}
                 </p>
                 <p className="upload-subtext">PNG, JPG up to 10MB</p>
                 <input 
@@ -279,27 +344,41 @@ export default function CrimeDetectionApp() {
           {/* Results Panel */}
           <div className="panel">
             <h2>
-              <AlertTriangle size={20} color="#ef4444" /> Detection Results
+              <Target size={20} color="#ef4444" /> Detection Results
             </h2>
 
             {!previewImage && !isProcessing && !detectionResult && (
               <div className="empty-state">
                 <XCircle className="empty-icon" />
-                <p>No analysis yet</p>
+                <p>No evidence analyzed</p>
                 <p style={{fontSize:'14px',marginTop:'8px'}}>
-                  Capture or upload an image
+                  Upload or capture a crime scene
                 </p>
               </div>
             )}
 
             {previewImage && (
-              <img src={previewImage} alt="Preview" className="preview-image" />
+              <div style={{position:'relative'}}>
+                <canvas 
+                  ref={imageCanvasRef}
+                  className="preview-image"
+                  style={{
+                    width: '100%',
+                    height: 'auto',
+                    maxHeight: '280px',
+                    objectFit: 'contain'
+                  }}
+                />
+              </div>
             )}
 
             {isProcessing && (
               <div className="loading-state">
                 <RefreshCw className="spinner" />
-                <p style={{fontSize:'18px',fontWeight:'600'}}>Analyzing...</p>
+                <p style={{fontSize:'18px',fontWeight:'600'}}>Analyzing scene...</p>
+                <p style={{fontSize:'14px',color:'#9ca3af',marginTop:'8px'}}>
+                  Detecting persons, weapons, and evidence
+                </p>
               </div>
             )}
 
@@ -312,14 +391,27 @@ export default function CrimeDetectionApp() {
                       : <CheckCircle size={32} color="#16a34a" />
                     }
                     <h3>
-                      {detectionResult.detected ? 'THREAT DETECTED' : 'NO THREAT'}
+                      {detectionResult.detected ? 'EVIDENCE FOUND' : 'SCENE CLEAR'}
                     </h3>
+                  </div>
+
+                  <div className="evidence-summary">
+                    <div className="evidence-item">
+                      <span>Total Objects:</span>
+                      <span>{detectionResult.total_objects || 0}</span>
+                    </div>
+                    <div className="evidence-item">
+                      <span>Threat Level:</span>
+                      <span className={`threat-${detectionResult.threat_level}`}>
+                        {(detectionResult.threat_level || 'low').toUpperCase()}
+                      </span>
+                    </div>
                   </div>
 
                   {detectionResult.detected && (
                     <div className="result-details">
                       <div className="result-row">
-                        <span>Object:</span>
+                        <span>Primary Evidence:</span>
                         <span className="result-value">
                           {detectionResult.objectType}
                         </span>
@@ -340,7 +432,7 @@ export default function CrimeDetectionApp() {
                   )}
 
                   <div className="result-footer">
-                    Objects: {detectionResult.total_objects || 0} • {detectionResult.timestamp}
+                    {detectionResult.timestamp}
                   </div>
                 </div>
 
@@ -349,13 +441,13 @@ export default function CrimeDetectionApp() {
                     onClick={() => setShowChat(true)} 
                     className="btn btn-primary"
                   >
-                    <MessageCircle size={20} /> Ask Questions
+                    <MessageCircle size={20} /> Investigate
                   </button>
                   <button 
                     onClick={resetDetection} 
                     className="btn btn-secondary"
                   >
-                    Reset
+                    New Case
                   </button>
                 </div>
               </div>
@@ -372,7 +464,7 @@ export default function CrimeDetectionApp() {
             <div className="chat-header">
               <div className="chat-header-content">
                 <Bot size={20} color="#ef4444" /> 
-                <span className="chat-title">AI Assistant</span>
+                <span className="chat-title">Detective AI</span>
                 <span className="badge">POWERED BY GEMINI</span>
               </div>
               <button 
@@ -389,7 +481,7 @@ export default function CrimeDetectionApp() {
               {messages.length === 0 && (
                 <div className="chat-empty">
                   <Bot size={48} />
-                  <p>Ask me anything about the detection!</p>
+                  <p>Start your investigation!</p>
                 </div>
               )}
               
@@ -426,7 +518,7 @@ export default function CrimeDetectionApp() {
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                placeholder="Ask about the detection..."
+                placeholder="Ask about the evidence..."
                 disabled={isChatProcessing}
               />
               <button 
@@ -445,7 +537,7 @@ export default function CrimeDetectionApp() {
         <button 
           className="chat-toggle-btn" 
           onClick={() => setShowChat(!showChat)}
-          aria-label="Toggle chat"
+          aria-label="Toggle investigation assistant"
         >
           {showChat ? <X size={28} /> : <MessageCircle size={28} />}
         </button>

@@ -10,7 +10,6 @@ body {
   color: #fff;
 }
 
-/* Main App - Fixed Height, No Scroll */
 .app {
   height: 100vh;
   display: flex;
@@ -109,7 +108,7 @@ body {
   width: 100%;
   margin: 0 auto;
   flex: 1;
-  align-items: start;  /* Allows different heights */
+  align-items: start; 
 }
 
 /* Panel - Base Styles */
@@ -129,9 +128,9 @@ body {
   width: 500px;
 }
 
-/* Right Panel (Detection Results) - Taller */
+/* Right Panel (Detection Results) */
 .panel:last-child {
-  max-height: 100vh;
+  max-height: 120vh;
 }
 
 .panel h2 {
@@ -265,7 +264,7 @@ body {
   font-size: 12px;
 }
 
-/* Preview Image - Taller for better visibility */
+/* Preview Image */
 .preview-image {
   width: 100%;
   border-radius: 10px;
@@ -323,7 +322,7 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* Result Card - Compact & Clear */
+/* Result Card */
 .result-card {
   padding: 16px;
   border-radius: 10px;
@@ -410,7 +409,7 @@ body {
   box-shadow: 0 0 10px rgba(255, 68, 68, 0.6);
 }
 
-/* Floating Chat Widget - Compact */
+/* Floating Chat Widget */
 .chat-widget-wrapper {
   position: fixed;
   bottom: 20px;
@@ -442,7 +441,7 @@ body {
   box-shadow: 0 6px 20px rgba(104, 0, 0, 0.6);
 }
 
-/* Chat Window - Compact & Fixed Max Height */
+/* Chat Window */
 .chat-window {
   width: 380px;
   max-height: 520px;
@@ -479,7 +478,7 @@ body {
   overflow: hidden;
 }
 
-/* Chat Header - Compact */
+/* Chat Header */
 .chat-header {
   padding: 16px 20px;
   background: linear-gradient(135deg, #680000 0%, #240808 100%);
@@ -505,6 +504,7 @@ body {
   font-size: 10px;
   color: #10b981;
   background-color: rgba(16, 185, 129, 0.2);
+  margin-left: 60px;
   padding: 3px 8px;
   border-radius: 4px;
   font-weight: 700;
@@ -528,7 +528,7 @@ body {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
-/* Chat Messages - Fixed Height with Scroll */
+/* Chat Messages */
 .chat-messages {
   flex: 1;
   overflow-y: auto;
@@ -646,7 +646,7 @@ body {
   50% { opacity: 1; }
 }
 
-/* Chat Input - Compact */
+/* Chat Input */
 .chat-input {
   display: flex;
   gap: 10px;
@@ -744,4 +744,46 @@ body {
   .button-group {
     grid-template-columns: 1fr;
   }
+}
+
+/* Evidence Summary */
+.evidence-summary {
+  padding: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.evidence-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.evidence-item span:first-child {
+  color: #9ca3af;
+}
+
+.evidence-item span:last-child {
+  font-weight: 600;
+  color: #fff;
+}
+
+.threat-high {
+  color: #ff4444 !important;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.threat-medium {
+  color: #ffaa00 !important;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.threat-low {
+  color: #00ff00 !important;
+  text-transform: uppercase;
+  font-weight: 700;
 }
