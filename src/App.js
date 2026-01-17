@@ -24,6 +24,7 @@ export default function DetectiveInvestigationApp() {
 
   const BACKEND_URL = 'https://yolo-backend-mhrm.onrender.com';
 
+
   useEffect(() => {
     if (showChat && chatEndRef.current) {
       chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -268,7 +269,7 @@ export default function DetectiveInvestigationApp() {
             <AlertTriangle className="header-icon" />
             <div>
               <h1>Detective Co-AI-Nan</h1>
-              <p className="header-subtitle">AI-powered crime scene analysis with evidence detection</p>
+              <p className="header-subtitle">Crime scene analysis with evidence detection</p>
             </div>
           </div>
         </div>
