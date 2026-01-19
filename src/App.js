@@ -22,7 +22,8 @@ export default function DetectiveInvestigationApp() {
   const chatEndRef = useRef(null);
   const imageCanvasRef = useRef(null);
 
-  const BACKEND_URL = 'https://yolo-backend-mhrm.onrender.com';
+  const DETECTION_API = 'https://yolo-backend-mhrm.onrender.com';
+  const CHATBOT_API = 'https://crime-detection-chatbot-api.onrender.com';
 
 
   useEffect(() => {
@@ -116,7 +117,7 @@ export default function DetectiveInvestigationApp() {
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch(`${BACKEND_URL}/detect`, {
+      const response = await fetch(`${DETECTION_API}/detect`, {
         method: 'POST',
         body: formData
       });
@@ -136,21 +137,21 @@ export default function DetectiveInvestigationApp() {
       ) || [];
       
       const welcomeMessage = result.detected
-        ? `🕵️ **CRIME SCENE ANALYSIS COMPLETE**\n\n` +
-          `**Evidence Found:** ${evidenceCount} item(s) detected\n` +
-          `**Threats Identified:** ${threats.length} dangerous object(s)\n` +
-          `**Primary Threat:** ${result.objectType} (${result.confidence}% confidence)\n\n` +
+        ? `CRIME SCENE ANALYSIS COMPLETE\n\n` +
+          `Evidence Found: ${evidenceCount} item(s) detected\n` +
+          `Threats Identified: ${threats.length} dangerous object(s)\n` +
+          `Primary Threat: ${result.objectType} (${result.confidence}% confidence)\n\n` +
           `I've marked all evidence with bounding boxes. What would you like to investigate?`
-        : `🕵️ **SCENE ANALYSIS COMPLETE**\n\n` +
-          `**Status:** No threats detected\n` +
-          `**Evidence:** ${evidenceCount} object(s) found\n\n` +
+        : `SCENE ANALYSIS COMPLETE**\n\n` +
+          `Status: No threats detected\n` +
+          `Evidence: ${evidenceCount} object(s) found\n\n` +
           `The scene appears safe. How may I assist your investigation?`;
       
       addBotMessage(welcomeMessage);
       
     } catch (error) {
       console.error('Detection error:', error);
-      alert(`Error: ${error.message}\n\nMake sure backend is running at: ${BACKEND_URL}`);
+      alert(`Error: ${error.message}\n\nMake sure backend is running at: ${DETECTION_API}`);
     } finally {
       setIsProcessing(false);
     }
@@ -225,7 +226,7 @@ export default function DetectiveInvestigationApp() {
     setIsChatProcessing(true);
 
     try {
-      const response = await fetch(`${BACKEND_URL}/chat`, {
+      const response = await fetch(`${CHATBOT_API}/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
